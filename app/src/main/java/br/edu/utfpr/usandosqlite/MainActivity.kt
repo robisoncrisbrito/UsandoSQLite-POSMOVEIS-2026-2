@@ -1,6 +1,7 @@
 package br.edu.utfpr.usandosqlite
 
 import android.content.ContentValues
+import android.content.Intent
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.os.Bundle
@@ -96,23 +97,29 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun btListarOnClick() {
-        val registros = banco.listar()
 
-       val saida = StringBuilder()
+        val intent = Intent(this, ListarActivity::class.java)
+        startActivity(intent)
 
-        registros.forEach { cadastro ->
-            saida.append(cadastro.nome)
-            saida.append( " - " )
-            saida.append(cadastro.telefone)
-            saida.append( "\n" )
-        }
+        /*
+val registros = banco.listar()
 
-        Toast.makeText(
-            this,
-            saida.toString(),
-            Toast.LENGTH_SHORT
-        ).show()
 
+val saida = StringBuilder()
+
+registros.forEach { cadastro ->
+    saida.append(cadastro.nome)
+    saida.append( " - " )
+    saida.append(cadastro.telefone)
+    saida.append( "\n" )
+}
+
+Toast.makeText(
+    this,
+    saida.toString(),
+    Toast.LENGTH_SHORT
+).show()
+*/
     }
 
 }
