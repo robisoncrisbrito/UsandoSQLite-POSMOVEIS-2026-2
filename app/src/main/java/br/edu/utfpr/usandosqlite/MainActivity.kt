@@ -9,12 +9,14 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import br.edu.utfpr.usandosqlite.database.DatabaseHandler
 import br.edu.utfpr.usandosqlite.databinding.ActivityMainBinding
+import br.edu.utfpr.usandosqlite.entity.Cadastro
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private lateinit var banco: SQLiteDatabase
+    private lateinit var banco: DatabaseHandler
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,10 +30,7 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        banco = openOrCreateDatabase("banco.db", MODE_PRIVATE, null)
-        banco.execSQL( "CREATE TABLE IF NOT EXISTS cadastro( _id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                "nome TEXT, telefone TEXT ) ")
-
+        banco = DatabaseHandler(this)
 
         binding.btIncluir.setOnClickListener {
             btIncluirOnClick()
@@ -52,47 +51,44 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun btIncluirOnClick() {
-        val registro = ContentValues()
-        registro.put( "nome", binding.etNome.text.toString() )
-        registro.put( "telefone", binding.etTelefone.text.toString() )
 
-        banco.insert(  "cadastro", null, registro )
+        val cadastro = Cadastro(
+            0,
+            binding.etNome.text.toString(),
+            binding.etTelefone.text.toString()
+        )
+
+        banco.inserir(  cadastro )
 
         Toast.makeText( this, "Sucesso", Toast.LENGTH_SHORT ).show()
     }
 
     fun btAlterarOnClick() {
-        val registro = ContentValues()
-        registro.put( "nome", binding.etNome.text.toString() )
-        registro.put( "telefone", binding.etTelefone.text.toString() )
+        val cadastro = Cadastro(
+            binding.etCod.text.toString().toInt(),
+            binding.etNome.text.toString(),
+            binding.etTelefone.text.toString()
+        )
 
-        banco.update( "cadastro", registro, "_id = ${binding.etCod.text.toString()}", null )
+        banco.alterar(  cadastro )
 
         Toast.makeText( this, "Sucesso", Toast.LENGTH_SHORT ).show()
 
     }
 
     fun btExcluirOnClick() {
-        banco.delete( "cadastro", "_id =  ${binding.etCod.text.toString()}", null )
+        banco.excluir(binding.etCod.text.toString().toInt())
 
         Toast.makeText( this, "Sucesso", Toast.LENGTH_SHORT ).show()
     }
 
     fun btPesquisarOnClick() {
 
-        val cursor = banco.query(
-            "cadastro",
-            null,
-            "_id = ${binding.etCod.text.toString()}",
-            null,
-            null,
-            null,
-            null
-        )
+        val cadastro = banco.pesquisar(binding.etCod.text.toString().toInt())
 
-        if( cursor.moveToNext() ) {
-            binding.etNome.setText( cursor.getString(NOME) )
-            binding.etTelefone.setText( cursor.getString(TELEFONE) )
+        if( cadastro != null ) {
+            binding.etNome.setText( cadastro.nome )
+            binding.etTelefone.setText( cadastro.telefone )
         } else {
             Toast.makeText( this, "Registro não encontrado", Toast.LENGTH_SHORT ).show()
         }
@@ -100,22 +96,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun btListarOnClick() {
-        val cursor = banco.query(
-            "cadastro",
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
-        )
+        val registros = banco.listar()
 
        val saida = StringBuilder()
 
-        while ( cursor.moveToNext() ) {
-            saida.append(cursor.getString(NOME))
+        registros.forEach { cadastro ->
+            saida.append(cadastro.nome)
             saida.append( " - " )
-            saida.append(cursor.getString(TELEFONE))
+            saida.append(cadastro.telefone)
             saida.append( "\n" )
         }
 
@@ -127,9 +115,4 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    companion object {
-        private const val ID = 0
-        private const val NOME = 1
-        private const val TELEFONE = 2
-    }
 }
