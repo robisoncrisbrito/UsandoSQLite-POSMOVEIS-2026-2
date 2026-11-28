@@ -1,5 +1,6 @@
 package br.edu.utfpr.usandosqlite
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.ArrayAdapter
 import android.widget.SimpleCursorAdapter
@@ -28,6 +29,11 @@ class ListarActivity : AppCompatActivity() {
         }
 
         banco = DatabaseHandler.getInstance(this)
+
+        binding.btIncluir.setOnClickListener {
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
+        }
 
         montarListaInicial()
 

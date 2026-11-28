@@ -5,6 +5,7 @@ import android.content.Intent
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -33,9 +34,14 @@ class MainActivity : AppCompatActivity() {
 
         banco = DatabaseHandler.getInstance( this )
 
-        binding.etCod.setText( intent.getIntExtra( "id", 0 ).toString() )
-        binding.etNome.setText( intent.getStringExtra( "nome" ) )
-        binding.etTelefone.setText( intent.getStringExtra( "telefone" ) )
+        if ( intent.getIntExtra( "id", 0 ) != 0 ) {
+            binding.etCod.setText(intent.getIntExtra("id", 0).toString())
+            binding.etNome.setText(intent.getStringExtra("nome"))
+            binding.etTelefone.setText(intent.getStringExtra("telefone"))
+        } else {
+            binding.btExcluir.visibility = View.GONE
+            binding.btPesquisar.visibility = View.GONE
+        }
 
         binding.btAlterar.setOnClickListener {
             btAlterarOnClick()
@@ -49,30 +55,27 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun btIncluirOnClick() {
-
-        val cadastro = Cadastro(
-            0,
-            binding.etNome.text.toString(),
-            binding.etTelefone.text.toString()
-        )
-
-        banco.inserir(  cadastro )
-
-        Toast.makeText( this, "Sucesso", Toast.LENGTH_SHORT ).show()
-    }
-
     fun btAlterarOnClick() {
-        val cadastro = Cadastro(
-            binding.etCod.text.toString().toInt(),
-            binding.etNome.text.toString(),
-            binding.etTelefone.text.toString()
-        )
 
-        banco.alterar(  cadastro )
+        if ( binding.etCod.text.toString().isEmpty() ) {
+            val cadastro = Cadastro(
+                0,
+                binding.etNome.text.toString(),
+                binding.etTelefone.text.toString()
+            )
+            banco.inserir(  cadastro )
+
+        } else {
+            val cadastro = Cadastro(
+                binding.etCod.text.toString().toInt(),
+                binding.etNome.text.toString(),
+                binding.etTelefone.text.toString()
+            )
+            banco.alterar(cadastro)
+
+        }
 
         Toast.makeText( this, "Sucesso", Toast.LENGTH_SHORT ).show()
-
         finish()
     }
 
@@ -95,32 +98,6 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText( this, "Registro não encontrado", Toast.LENGTH_SHORT ).show()
         }
 
-    }
-
-    fun btListarOnClick() {
-
-        val intent = Intent(this, ListarActivity::class.java)
-        startActivity(intent)
-
-        /*
-val registros = banco.listar()
-
-
-val saida = StringBuilder()
-
-registros.forEach { cadastro ->
-    saida.append(cadastro.nome)
-    saida.append( " - " )
-    saida.append(cadastro.telefone)
-    saida.append( "\n" )
-}
-
-Toast.makeText(
-    this,
-    saida.toString(),
-    Toast.LENGTH_SHORT
-).show()
-*/
     }
 
 }
