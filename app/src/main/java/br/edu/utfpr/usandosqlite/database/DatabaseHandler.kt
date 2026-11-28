@@ -131,7 +131,6 @@ class DatabaseHandler( context: Context): SQLiteOpenHelper(context, DATABASE_NAM
         @Volatile
         private var INSTANCE: DatabaseHandler? = null
 
-
         fun getInstance(context: Context): DatabaseHandler {
             return INSTANCE ?: synchronized(this) {
                 val instance = DatabaseHandler(context.applicationContext)

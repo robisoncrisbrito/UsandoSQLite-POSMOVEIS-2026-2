@@ -33,9 +33,10 @@ class MainActivity : AppCompatActivity() {
 
         banco = DatabaseHandler.getInstance( this )
 
-        binding.btIncluir.setOnClickListener {
-            btIncluirOnClick()
-        }
+        binding.etCod.setText( intent.getIntExtra( "id", 0 ).toString() )
+        binding.etNome.setText( intent.getStringExtra( "nome" ) )
+        binding.etTelefone.setText( intent.getStringExtra( "telefone" ) )
+
         binding.btAlterar.setOnClickListener {
             btAlterarOnClick()
         }
@@ -44,9 +45,6 @@ class MainActivity : AppCompatActivity() {
         }
         binding.btPesquisar.setOnClickListener {
             btPesquisarOnClick()
-        }
-        binding.btListar.setOnClickListener {
-            btListarOnClick()
         }
 
     }
@@ -75,12 +73,15 @@ class MainActivity : AppCompatActivity() {
 
         Toast.makeText( this, "Sucesso", Toast.LENGTH_SHORT ).show()
 
+        finish()
     }
 
     fun btExcluirOnClick() {
         banco.excluir(binding.etCod.text.toString().toInt())
 
         Toast.makeText( this, "Sucesso", Toast.LENGTH_SHORT ).show()
+
+        finish()
     }
 
     fun btPesquisarOnClick() {
