@@ -2,6 +2,7 @@ package br.edu.utfpr.usandosqlite
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.ArrayAdapter
 import android.widget.SimpleCursorAdapter
 import androidx.activity.enableEdgeToEdge
@@ -35,8 +36,7 @@ class ListarActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        montarListaInicial()
-
+        Log.i( "ciclodevida", "onCreate() executado" )
     }
 
     private fun montarListaInicial() {
@@ -80,4 +80,39 @@ class ListarActivity : AppCompatActivity() {
 
 
     }
-}
+
+    override fun onStart() {
+        super.onStart()
+
+        montarListaInicial()
+
+        Log.i( "ciclodevida", "onStart() executado" )
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Log.i( "ciclodevida", "onResume() executado" )
+    }
+
+    //em estado de execução
+    override fun onPause() {
+        super.onPause()
+        Log.i( "ciclodevida", "onPause() executado" )
+    }
+
+    override fun onStop() {
+        super.onStop()
+        Log.i( "ciclodevida", "onStop() executado" )
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.i( "ciclodevida", "onDestroy() executado" )
+    }
+
+    override fun onRestart() {
+        super.onRestart()
+        Log.i( "ciclodevida", "onRestart() executado" )
+    }
+
+} //fim do MainActivity
