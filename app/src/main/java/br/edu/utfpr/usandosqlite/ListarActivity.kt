@@ -9,9 +9,11 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import br.edu.utfpr.usandosqlite.adapter.ElementoListaAdapter
 import br.edu.utfpr.usandosqlite.database.DatabaseHandler
 import br.edu.utfpr.usandosqlite.databinding.ActivityListarBinding
+import kotlinx.coroutines.launch
 
 class ListarActivity : AppCompatActivity() {
 
@@ -29,7 +31,7 @@ class ListarActivity : AppCompatActivity() {
             insets
         }
 
-        banco = DatabaseHandler.getInstance(this)
+        banco = DatabaseHandler(this)
 
         binding.btIncluir.setOnClickListener {
             val intent = Intent(this, MainActivity::class.java)
@@ -42,13 +44,15 @@ class ListarActivity : AppCompatActivity() {
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                if (newText != null) {
-                    val registros = banco.search(newText)
-                    val adapter = ElementoListaAdapter(
-                        this@ListarActivity,
-                        registros
-                    )
-                    binding.lvCadastro.adapter = adapter
+                lifecycleScope.launch {
+                    if (newText != null) {
+                        val registros = banco.search(newText)
+                        val adapter = ElementoListaAdapter(
+                            this@ListarActivity,
+                            registros
+                        )
+                        binding.lvCadastro.adapter = adapter
+                    }
                 }
                 return true
             }
@@ -87,16 +91,18 @@ class ListarActivity : AppCompatActivity() {
 
         binding.lvCadastro.adapter = adapter
 */
-        val registros = banco.listar()
 
-        val adapter = ElementoListaAdapter(
-            this,
-            registros
-        )
+        lifecycleScope.launch {
+            val registros = banco.listar()
 
-        binding.lvCadastro.adapter = adapter
+            val adapter = ElementoListaAdapter(
+                this@ListarActivity,
+                registros
+            )
 
+            binding.lvCadastro.adapter = adapter
 
+        }
     }
 
     override fun onStart() {

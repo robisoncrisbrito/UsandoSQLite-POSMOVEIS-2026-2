@@ -13,9 +13,13 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import br.edu.utfpr.usandosqlite.database.DatabaseHandler
 import br.edu.utfpr.usandosqlite.databinding.ActivityMainBinding
 import br.edu.utfpr.usandosqlite.entity.Cadastro
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
@@ -34,7 +38,7 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        banco = DatabaseHandler.getInstance( this )
+        banco = DatabaseHandler( this )
 
         if ( intent.getIntExtra( "id", 0 ) != 0 ) {
             binding.etCod.setText(intent.getIntExtra("id", 0).toString())
@@ -59,34 +63,40 @@ class MainActivity : AppCompatActivity() {
 
     fun btAlterarOnClick() {
 
-        if ( binding.etCod.text.toString().isEmpty() ) {
-            val cadastro = Cadastro(
-                0,
-                binding.etNome.text.toString(),
-                binding.etTelefone.text.toString()
-            )
-            banco.inserir(  cadastro )
+        lifecycleScope.launch {
 
-        } else {
-            val cadastro = Cadastro(
-                binding.etCod.text.toString().toInt(),
-                binding.etNome.text.toString(),
-                binding.etTelefone.text.toString()
-            )
-            banco.alterar(cadastro)
+            if (binding.etCod.text.toString().isEmpty()) {
+                val cadastro = Cadastro(
+                    0,
+                    binding.etNome.text.toString(),
+                    binding.etTelefone.text.toString()
+                )
+                banco.inserir(cadastro)
 
+            } else {
+                val cadastro = Cadastro(
+                    binding.etCod.text.toString().toInt(),
+                    binding.etNome.text.toString(),
+                    binding.etTelefone.text.toString()
+                )
+                banco.alterar(cadastro)
+
+            }
+
+            Toast.makeText(this@MainActivity, "Sucesso", Toast.LENGTH_SHORT).show()
+            finish()
         }
-
-        Toast.makeText( this, "Sucesso", Toast.LENGTH_SHORT ).show()
-        finish()
     }
 
     fun btExcluirOnClick() {
-        banco.excluir(binding.etCod.text.toString().toInt())
 
-        Toast.makeText( this, "Sucesso", Toast.LENGTH_SHORT ).show()
+        lifecycleScope.launch {
+            banco.excluir(binding.etCod.text.toString().toInt())
 
-        finish()
+            Toast.makeText(this@MainActivity, "Sucesso", Toast.LENGTH_SHORT).show()
+
+            finish()
+        }
     }
 
     fun btPesquisarOnClick() {
@@ -98,17 +108,20 @@ class MainActivity : AppCompatActivity() {
         builder.setCancelable(false)
         builder.setNegativeButton( "Fechar", null )
         builder.setPositiveButton( "Pesquisar", { dialog, which ->
-            val cadastro = banco.pesquisar(etCodPesquisa.text.toString().toInt())
+            lifecycleScope.launch {
+                val cadastro = banco.pesquisar(etCodPesquisa.text.toString().toInt())
 
-            if( cadastro != null ) {
-                binding.etCod.setText( etCodPesquisa.text.toString() )
-                binding.etNome.setText( cadastro.nome )
-                binding.etTelefone.setText( cadastro.telefone )
-            } else {
-                Toast.makeText( this, "Registro não encontrado", Toast.LENGTH_SHORT ).show()
+                if (cadastro != null) {
+                    binding.etCod.setText(etCodPesquisa.text.toString())
+                    binding.etNome.setText(cadastro.nome)
+                    binding.etTelefone.setText(cadastro.telefone)
+                } else {
+                    Toast.makeText(this@MainActivity, "Registro não encontrado", Toast.LENGTH_SHORT)
+                        .show()
+                }
             }
-
-        })
+        }
+        )
         builder.show()
     }
 

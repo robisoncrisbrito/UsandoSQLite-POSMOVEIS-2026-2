@@ -1,73 +1,59 @@
 package br.edu.utfpr.usandosqlite.database
 
-import android.content.ContentValues
 import android.content.Context
-import android.database.Cursor
-import android.database.sqlite.SQLiteDatabase
-import android.database.sqlite.SQLiteOpenHelper
 import br.edu.utfpr.usandosqlite.entity.Cadastro
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.tasks.await
 
-class DatabaseHandler( context: Context): SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION ) {
+class DatabaseHandler( context: Context) {
 
-    override fun onCreate(banco: SQLiteDatabase?) {
-        banco?.execSQL( "CREATE TABLE IF NOT EXISTS ${TABLE_NAME}( _id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                "nome TEXT, telefone TEXT )" )
-    }
+    private val banco = Firebase.firestore
 
+    suspend fun inserir( cadastro: Cadastro) {
 
-    override fun onUpgrade(
-        banco: SQLiteDatabase?,
-        oldVersion: Int,
-        newVersion: Int
-    ) {
-        banco?.execSQL("DROP TABLE IF EXISTS ${TABLE_NAME}")
-        this.onCreate(banco)
-    }
-
-    fun inserir( cadastro: Cadastro) {
-        val banco = this.writableDatabase
-
-        val registro = ContentValues()
-        registro.put( "nome", cadastro.nome )
-        registro.put( "telefone", cadastro.telefone )
-
-        banco.insert(  TABLE_NAME, null, registro )
-    }
-
-    fun alterar( cadastro: Cadastro ) {
-        val banco = this.writableDatabase
-
-        val registro = ContentValues()
-        registro.put( "nome", cadastro.nome )
-        registro.put( "telefone", cadastro.telefone )
-
-        banco.update( TABLE_NAME, registro, "_id = ${cadastro.id}", null )
-    }
-
-    fun excluir( id: Int ) {
-        val banco = this.writableDatabase
-
-        banco.delete( TABLE_NAME, "_id =  ${id}", null )
-    }
-
-    fun pesquisar( id: Int ): Cadastro? {
-        val banco = this.writableDatabase
-
-        val cursor = banco.query(
-            TABLE_NAME,
-            null,
-            "_id = ${id}",
-            null,
-            null,
-            null,
-            null
+        val registro = hashMapOf(
+            "nome" to cadastro.nome,
+            "telefone" to cadastro.telefone
         )
 
-        if( cursor.moveToNext() ) {
+        banco.collection("cadastro")
+            .document(cadastro.id.toString())
+            .set(registro)
+            .await()
+    }
+
+    suspend fun alterar( cadastro: Cadastro ) {
+        val registro = hashMapOf(
+            "nome" to cadastro.nome,
+            "telefone" to cadastro.telefone
+        )
+
+        banco.collection("cadastro")
+            .document(cadastro.id.toString())
+            .set(registro)
+            .await()
+    }
+
+    suspend fun excluir( id: Int ) {
+        banco.collection("cadastro")
+            .document(id.toString())
+            .delete()
+            .await()
+
+    }
+
+    suspend fun pesquisar( id: Int ): Cadastro? {
+        val document = banco.collection("cadastro")
+            .document(id.toString())
+            .get()
+            .await()
+
+        if ( document.exists() ) {
             val cadastro = Cadastro(
-                cursor.getInt(ID),
-                cursor.getString(NOME),
-                cursor.getString(TELEFONE)
+                document.id.toInt(),
+                document.data?.get("nome").toString(),
+                document.data?.get("telefone").toString()
             )
             return cadastro
         } else {
@@ -76,42 +62,18 @@ class DatabaseHandler( context: Context): SQLiteOpenHelper(context, DATABASE_NAM
 
     }
 
-    fun listarCursor(): Cursor { //método só pode ser usado com o SQLIte
-        val banco = this.writableDatabase
-
-        val cursor = banco.query(
-            TABLE_NAME,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
-        )
-
-        return cursor
-    }
-
-    fun listar(): MutableList<Cadastro> {
-        val banco = this.writableDatabase
-
-        val cursor = banco.query(
-            "cadastro",
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
-        )
+    suspend fun listar(): MutableList<Cadastro> {
+        val documentos = banco.collection("cadastro")
+            .get()
+            .await()
 
         val registros = mutableListOf<Cadastro>()
 
-        while ( cursor.moveToNext() ) {
+        for ( documento in documentos ) {
             val cadastro = Cadastro(
-                cursor.getInt(ID),
-                cursor.getString(NOME),
-                cursor.getString(TELEFONE)
+                documento.id.toInt(),
+                documento.data?.get("nome").toString(),
+                documento.data?.get("telefone").toString()
             )
             registros.add(cadastro)
         }
@@ -120,51 +82,23 @@ class DatabaseHandler( context: Context): SQLiteOpenHelper(context, DATABASE_NAM
 
     }
 
-    fun search(nome: String): MutableList<Cadastro> {
-        val banco = this.writableDatabase
-
-        val cursor = banco.query(
-            TABLE_NAME,
-            null,
-            "nome LIKE ?",
-            arrayOf("%$nome%"),
-            null,
-            null,
-            null
-        )
-
+    suspend fun search(nome: String): MutableList<Cadastro> {
         val registros = mutableListOf<Cadastro>()
 
-        while ( cursor.moveToNext() ) {
+        val documentos = banco.collection("cadastro")
+            .whereGreaterThanOrEqualTo("nome", nome)
+            .get()
+            .await()
+
+        for ( documento in documentos ) {
             val cadastro = Cadastro(
-                cursor.getInt(ID),
-                cursor.getString(NOME),
-                cursor.getString(TELEFONE)
+                documento.id.toInt(),
+                documento.data?.get("nome").toString(),
+                documento.data?.get("telefone").toString()
             )
             registros.add(cadastro)
         }
-
         return registros
-    }
-
-    companion object {
-        private const val ID = 0
-        private const val NOME = 1
-        private const val TELEFONE = 2
-        private const val DATABASE_NAME = "banco.db"
-        private const val TABLE_NAME = "cadastro"
-        private const val DATABASE_VERSION = 1
-
-        @Volatile
-        private var INSTANCE: DatabaseHandler? = null
-
-        fun getInstance(context: Context): DatabaseHandler {
-            return INSTANCE ?: synchronized(this) {
-                val instance = DatabaseHandler(context.applicationContext)
-                INSTANCE = instance
-                return instance
-            }
-        }
     }
 
 }
