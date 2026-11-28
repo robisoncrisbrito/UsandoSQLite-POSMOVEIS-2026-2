@@ -36,6 +36,24 @@ class ListarActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
+        binding.svFiltro.setOnQueryTextListener(object : android.widget.SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                return false
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                if (newText != null) {
+                    val registros = banco.search(newText)
+                    val adapter = ElementoListaAdapter(
+                        this@ListarActivity,
+                        registros
+                    )
+                    binding.lvCadastro.adapter = adapter
+                }
+                return true
+            }
+        })
+
         Log.i( "ciclodevida", "onCreate() executado" )
     }
 

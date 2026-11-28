@@ -120,6 +120,33 @@ class DatabaseHandler( context: Context): SQLiteOpenHelper(context, DATABASE_NAM
 
     }
 
+    fun search(nome: String): MutableList<Cadastro> {
+        val banco = this.writableDatabase
+
+        val cursor = banco.query(
+            TABLE_NAME,
+            null,
+            "nome LIKE ?",
+            arrayOf("%$nome%"),
+            null,
+            null,
+            null
+        )
+
+        val registros = mutableListOf<Cadastro>()
+
+        while ( cursor.moveToNext() ) {
+            val cadastro = Cadastro(
+                cursor.getInt(ID),
+                cursor.getString(NOME),
+                cursor.getString(TELEFONE)
+            )
+            registros.add(cadastro)
+        }
+
+        return registros
+    }
+
     companion object {
         private const val ID = 0
         private const val NOME = 1
